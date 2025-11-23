@@ -102,15 +102,8 @@ class Solucion(Grafo):
                 #print(rutas)
                 if sol_factible:
                     rutas = self.cargarRutas(rutas, capacidad,G)
-                # if not sol_factible:
-                #     self.eliminarRutasSobrantes(rutas, nroVehiculos, capacidad)
-                
-                # if(sol_factible):
-                #     rutas = self.cargarRutas(rutas, capacidad,G)
-                # else:
-                #     rutas = self.cargarRutas(rutas, capacidad,G)
-                #     #self.eliminarRutasSobrantes(rutas, nroVehiculos, capacidad)
-                strSolInicial = 0
+                else:
+                    strSolInicial = 0
             
             elif(strSolInicial == 2):
                 print("Sol Inicial secuencial...")

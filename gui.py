@@ -339,7 +339,6 @@ class GUI(QMainWindow):
     def establecerProgresoBarra(self, T):
         """Recibe una tupla, en la que el primer elemento es el progreso total de la instancia"""
         #print(f"tiempo: {T[0]}, barra: {T[1]}")
-
         self.barrasCargaInstancia[T[1]].setValue(T[0]*100)
 
     def ventanaCargaInstancia(self):
@@ -810,7 +809,7 @@ class GUI(QMainWindow):
             tablaResoluciones.setItem(
                 i, 0, QTableWidgetItem(str(filasResoluciones[i][1])))
             tablaResoluciones.setItem(
-                i, 1, QTableWidgetItem(str(filasResoluciones[i][2])))
+                i, 1, QTableWidgetItem(f"{float(filasResoluciones[i][2]):.2f}"))
             tablaResoluciones.setItem(
                 i, 2, QTableWidgetItem(str(filasResoluciones[i][3])))
             tablaResoluciones.setItem(
@@ -870,12 +869,18 @@ class GUI(QMainWindow):
     @QtCore.pyqtSlot(QtWidgets.QTreeWidgetItem)
     def establecerSolucionSeleccionada(self, grafico, coordenadas, arbol, nroVehiculos):
         filaSeleccionada = arbol.selectedItems()[0]
-        if filaSeleccionada.parent() == None:
+        if filaSeleccionada.parent() is None:  # An iteration/solution is selected
             rutas = []
-            R = filaSeleccionada.child(0)
-            for j in range(R.childCount()):
-                vertices = R.child(j).text(0)
-                rutas.append(json.loads(vertices))
+            for i in range(filaSeleccionada.childCount()):
+                ruta_item = filaSeleccionada.child(i)
+                ruta_text = ruta_item.text(0) # e.g., "Ruta 1 > [1, 2, 3, 4]"
+                try:
+                    # Split by ">" and get the list part
+                    vertices_str = ruta_text.split(' > ')[1]
+                    rutas.append(json.loads(vertices_str))
+                except (IndexError, json.JSONDecodeError):
+                    # Handle cases where the format is unexpected or if a child is not a route
+                    continue
             self.dibujarSolucion(grafico, rutas, coordenadas, nroVehiculos)
 
     def establecerResolucionSeleccionada(self, tabla, arbol, grafico, instancia):
@@ -887,16 +892,15 @@ class GUI(QMainWindow):
         items = []
         print("resolución ", self.resolucionSeleccionada)
         print("soluciones ", filasSoluciones)
-        for s in filasSoluciones:
+        for i, s in enumerate(filasSoluciones):
             rutas = json.loads(s[2])
             origen = json.loads(s[3])
-            fila = QtGui.QTreeWidgetItem(arbol, [str(s[4]), str(s[1]), self.getOrigenSolucion(origen)])
-            for r in range(len(rutas)):
-                ruta = QtGui.QTreeWidgetItem(fila, [("Ruta %d")%(r+1)])
-                for i in range(len(rutas)):
-                    vertices = QtGui.QTreeWidgetItem(ruta, [str(rutas[i])])
-                    ruta.addChild(vertices)
-            fila.addChild(ruta)
+            iteracion = str(s[4]) #Iteracion
+            if i==0:
+                iteracion = "0"
+            fila = QTreeWidgetItem(arbol, [iteracion, f"{float(s[1]):.2f}", self.getOrigenSolucion(origen)])
+            for r_idx, ruta_data in enumerate(rutas):
+                QTreeWidgetItem(fila, [f"Ruta {r_idx + 1} > {str(ruta_data)}"])
         arbol.insertTopLevelItems(0, items)
         self.seleccionarPrimerFilaTW(arbol, grafico, instancia)
 
